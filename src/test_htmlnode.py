@@ -19,7 +19,11 @@ class TestHTMLNode(unittest.TestCase):
     def test_props_to_html(self):
 
         html_string = ' href="https://www.google.com" target="_blank"'
-        node = HTMLNode("a", "this is a text", props={"href": "https://www.google.com", "target": "_blank"})
+        node = HTMLNode(
+            "a",
+            "this is a text",
+            None,
+            {"href": "https://www.google.com", "target": "_blank"})
 
         self.assertEqual(node.props_to_html(), html_string)
 
@@ -28,3 +32,15 @@ class TestHTMLNode(unittest.TestCase):
         nodes = [node]
         node2 = HTMLNode("p", children=nodes)
         self.assertIsNotNone(node2.children)
+
+    def test_repr(self):
+        node = HTMLNode(
+            "p",
+            "What a strange world",
+            None,
+            {"class": "primary"},
+        )
+        self.assertEqual(
+            node.__repr__(),
+            "HTMLNode(p, What a strange world, None, {'class': 'primary'})",
+        )
