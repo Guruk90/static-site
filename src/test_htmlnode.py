@@ -2,6 +2,7 @@ import unittest
 
 from htmlnode import *
 
+
 class TestHTMLNode(unittest.TestCase):
     def test_eq(self):
         node = HTMLNode("p", "this is a text")
@@ -15,17 +16,15 @@ class TestHTMLNode(unittest.TestCase):
         self.assertIsNone(node2.children)
         # self.assertEqual(node, node2)
 
-    def test_eq(self):
+    def test_props_to_html(self):
 
         html_string = ' href="https://www.google.com" target="_blank"'
         node = HTMLNode("a", "this is a text", props={"href": "https://www.google.com", "target": "_blank"})
 
         self.assertEqual(node.props_to_html(), html_string)
 
-
-    def test_if_no_vale_children(self):
+    def test_if_no_value_children(self):
         node = HTMLNode("p", "this is a text")
         nodes = [node]
         node2 = HTMLNode("p", children=nodes)
         self.assertIsNotNone(node2.children)
-        
