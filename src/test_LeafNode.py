@@ -20,4 +20,8 @@ class TestLeafNode(unittest.TestCase):
         try:
             node4.to_html()
         except ValueError as e:
-            self.assertEqual(e.__repr__(),"ValueError('no Value')")
+            self.assertEqual(e.__repr__(), "ValueError('no Value')")
+
+
+if __name__ == "__main__":
+    unittest.main()
