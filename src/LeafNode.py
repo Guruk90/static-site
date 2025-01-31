@@ -7,14 +7,12 @@ class LeafNode(HTMLNode):
 
     def to_html(self):
         if self.value is None:
-            raise ValueError
+            raise ValueError("no Value")
 
         if self.tag is None:
             return self.value
         if self.props is None:
             return f"<{self.tag}>{self.value}</{self.tag}>"
-        html_str = f"<{self.tag}"
-        for key in self.props:
-            html_str += " " + key + '="' + self.props[key]+'"'
+        html_str = f"<{self.tag}{self.props_to_html()}"
         html_str += ">"
         return f"{html_str}{self.value}</{self.tag}>"
