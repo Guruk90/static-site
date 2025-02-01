@@ -6,11 +6,11 @@ class ParentNode(HTMLNode):
         super().__init__(tag=tag, children=children, props=props)
 
     def to_html(self):
-        if self.tag is None:
+        if self.tag is None or len(self.tag) == 0:
             raise ValueError("missing Tag")
-        if self.children is None:
+        if self.children is None or len(self.children) == 0:
             raise ValueError("missing Children")
-        html_string =""
+
         if self.props is not None:
             html_string = f"<{self.tag}{self.props_to_html()}>"
         else:
@@ -21,4 +21,3 @@ class ParentNode(HTMLNode):
         html_string += f"</{self.tag}>"
 
         return html_string
-

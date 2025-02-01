@@ -22,6 +22,32 @@ class TestLeafNode(unittest.TestCase):
         except ValueError as e:
             self.assertEqual(e.__repr__(), "ValueError('no Value')")
 
+    def test_to_html_with_value_and_tag(self):
+        node = LeafNode(tag='p', value='Hello, World!')
+        self.assertEqual(node.to_html(), '<p>Hello, World!</p>')
+
+    def test_to_html_with_value_tag_and_props(self):
+        node = LeafNode(tag='a', value='Click here', props={'href': 'http://example.com'})
+        # Assuming props_to_html() converts props to ' href="http://example.com"'
+        self.assertEqual(node.to_html(), '<a href="http://example.com">Click here</a>')
+
+    def test_to_html_with_no_value(self):
+        with self.assertRaises(ValueError):
+            node = LeafNode(tag='p', value=None)
+            node.to_html()
+
+    def test_to_html_with_no_tag(self):
+        node = LeafNode(tag=None, value='Just text')
+        self.assertEqual(node.to_html(), 'Just text')
+
+    def test_to_html_with_empty_tag(self):
+        node = LeafNode(tag='', value='Just text')
+        self.assertEqual(node.to_html(), 'Just text')
+
+    def test_to_html_with_no_props(self):
+        node = LeafNode(tag='div', value='Content')
+        self.assertEqual(node.to_html(), '<div>Content</div>')
+
 
 if __name__ == "__main__":
     unittest.main()
