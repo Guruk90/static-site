@@ -1,5 +1,5 @@
 import unittest
-from converter import text_node_to_html_node, split_nodes_delimiter
+from converter import text_node_to_html_node, split_nodes_delimiter, extract_markdown_links, extract_markdown_images
 from textnode import TextNode, TextType
 
 
@@ -115,6 +115,45 @@ class TestInlineMarkdown(unittest.TestCase):
             ],
             new_nodes,
         )
+
+
+class TestMarkdownExtraction(unittest.TestCase):
+
+    def test_extract_markdown_images(self):
+        text = "Here is an image ![alt text](http://example.com/image.png) in markdown."
+        expected_output = [('alt text', 'http://example.com/image.png')]
+        self.assertEqual(extract_markdown_images(text), expected_output)
+
+        # Test with multiple images
+        text = "![first image](http://example.com/first.png) and ![second image](http://example.com/second.png)"
+        expected_output = [
+            ('first image', 'http://example.com/first.png'),
+            ('second image', 'http://example.com/second.png')
+        ]
+        self.assertEqual(extract_markdown_images(text), expected_output)
+
+        # Test with no images
+        text = "This text has no images."
+        expected_output = []
+        self.assertEqual(extract_markdown_images(text), expected_output)
+
+    def test_extract_markdown_links(self):
+        text = "Here is a [link](http://example.com) in markdown."
+        expected_output = [('link', 'http://example.com')]
+        self.assertEqual(extract_markdown_links(text), expected_output)
+
+        # Test with multiple links
+        text = "[first link](http://example.com/first) and [second link](http://example.com/second)"
+        expected_output = [
+            ('first link', 'http://example.com/first'),
+            ('second link', 'http://example.com/second')
+        ]
+        self.assertEqual(extract_markdown_links(text), expected_output)
+
+        # Test with no links
+        text = "This text has no links."
+        expected_output = []
+        self.assertEqual(extract_markdown_links(text), expected_output)
 
 
 if __name__ == "__main__":
