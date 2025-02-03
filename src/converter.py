@@ -1,5 +1,6 @@
 import re
 
+
 from textnode import TextType, TextNode
 from LeafNode import LeafNode
 
@@ -55,22 +56,6 @@ def extract_markdown_links(text: str):
     return links
 
 
-def extract_markdown_text_links(text: str):
-    texts = re.split(r'\[.*?]\(.*?\)', text)
-
-    texts = [t for t in texts if t is not None]
-    return texts
-    # return [t for t in texts if t.strip()]
-
-
-def extract_markdown_text_images(text: str):
-    texts = re.split(r'!\[.*?]\(.*?\)', text)
-
-    texts = [t for t in texts if t is not None]
-    return texts
-    # return [t for t in texts if t.strip()]
-
-
 def split_nodes_links(old_nodes):
     new_nodes = []
     for node in old_nodes:
@@ -80,20 +65,25 @@ def split_nodes_links(old_nodes):
 
         # Extract links
         links = extract_markdown_links(node.text)
+        text: str = node.text
 
-        # Split text into parts around links
-        text_parts = extract_markdown_text_links(node.text)
+        if not links:
+            new_nodes.append(TextNode(text, TextType.TEXT))
+            continue
 
-        # Interleave text parts with links
-        link_index = 0
-        for i, text_part in enumerate(text_parts):
-            if text_part.strip():
-                new_nodes.append(TextNode(text_part, TextType.TEXT))
+        for link_text, link_url in links:
+            texts = text.split(f"[{link_text}]({link_url})", 1)
 
-            if link_index < len(links):
-                link_text, link_url = links[link_index]
-                new_nodes.append(TextNode(link_text, TextType.LINK, url=link_url))
-                link_index += 1
+            if texts[0] == '':
+                del texts[0]
+                text = texts[0]
+            else:
+                new_nodes.append(TextNode(texts[0], TextType.TEXT))
+                text = texts[1]
+
+            new_nodes.append(TextNode(link_text, TextType.LINK, url=link_url))
+        if text:
+            new_nodes.append(TextNode(text, TextType.TEXT))
 
     return new_nodes
 
@@ -107,26 +97,34 @@ def split_nodes_images(old_nodes):
 
         # Extract images
         images = extract_markdown_images(node.text)
+        text: str = node.text
 
-        # Split text into parts around images
-        text_parts = extract_markdown_text_images(node.text)
+        if not images:
+            new_nodes.append(TextNode(text, TextType.TEXT))
+            continue
 
-        # Interleave text parts with images
-        image_index = 0
-        for i, text_part in enumerate(text_parts):
-            if text_part.strip():
-                new_nodes.append(TextNode(text_part, TextType.TEXT))
+        for alt_text, image_url in images:
+            texts = text.split(f"![{alt_text}]({image_url})", 1)
 
-            if image_index < len(images):
-                image_alt, image_url = images[image_index]
-                new_nodes.append(TextNode(image_alt, TextType.IMAGE, url=image_url))
-                image_index += 1
+            if texts[0] == '':
+                del texts[0]
+                text = texts[0]
+            else:
+                new_nodes.append(TextNode(texts[0], TextType.TEXT))
+                text = texts[1]
+
+            new_nodes.append(TextNode(alt_text, TextType.IMAGE, url=image_url))
+        if text:
+            new_nodes.append(TextNode(text, TextType.TEXT))
 
     return new_nodes
 
 
 def text_to_textnodes(text):
-    nodes = []
+
+    if not text:
+        return []
+
     node = TextNode(text, TextType.TEXT)
     nodes = split_nodes_images([node])
     nodes = split_nodes_links(nodes)
