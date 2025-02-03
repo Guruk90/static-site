@@ -1,5 +1,7 @@
 import unittest
-from converter import text_node_to_html_node, split_nodes_delimiter, extract_markdown_links, extract_markdown_images
+
+from src.converter import text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, \
+    extract_markdown_links, split_nodes_links, split_nodes_images, text_to_textnodes
 from textnode import TextNode, TextType
 
 
@@ -154,6 +156,142 @@ class TestMarkdownExtraction(unittest.TestCase):
         text = "This text has no links."
         expected_output = []
         self.assertEqual(extract_markdown_links(text), expected_output)
+
+
+class TestSplitNodes(unittest.TestCase):
+
+    def test_split_nodes_links(self):
+        node = TextNode(
+            "Here is a [link](http://example.com) in markdown.",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_links([node])
+
+        expected_output = [
+            TextNode("Here is a ", TextType.TEXT),
+            TextNode("link", TextType.LINK, url="http://example.com"),
+            TextNode(" in markdown.", TextType.TEXT),
+        ]
+
+        self.assertEqual(len(new_nodes), len(expected_output))
+        for new_node, expected_node in zip(new_nodes, expected_output):
+            self.assertEqual(new_node.text, expected_node.text)
+            self.assertEqual(new_node.text_type, expected_node.text_type)
+            if new_node.text_type == TextType.LINK:
+                self.assertEqual(new_node.url, expected_node.url)
+
+    def test_split_nodes_images(self):
+        node = TextNode(
+            "Here is an image ![alt text](http://example.com/image.png) in markdown.",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_images([node])
+
+        expected_output = [
+            TextNode("Here is an image ", TextType.TEXT),
+            TextNode("alt text", TextType.IMAGE, url="http://example.com/image.png"),
+            TextNode(" in markdown.", TextType.TEXT),
+        ]
+
+        self.assertEqual(len(new_nodes), len(expected_output))
+        for new_node, expected_node in zip(new_nodes, expected_output):
+            self.assertEqual(new_node.text, expected_node.text)
+            self.assertEqual(new_node.text_type, expected_node.text_type)
+            if new_node.text_type == TextType.IMAGE:
+                self.assertEqual(new_node.url, expected_node.url)
+
+    def test_split_nodes_links_and_images(self):
+        node = TextNode(
+            "Here is a [link](http://example.com) and an image ![alt text](http://example.com/image.png).",
+            TextType.TEXT,
+        )
+        # First split links
+        new_nodes = split_nodes_images([node])
+        # Then split images
+        new_nodes = split_nodes_links(new_nodes)
+
+        expected_output = [
+            TextNode("Here is a ", TextType.TEXT),
+            TextNode("link", TextType.LINK, url="http://example.com"),
+            TextNode(" and an image ", TextType.TEXT),
+            TextNode("alt text", TextType.IMAGE, url="http://example.com/image.png"),
+            TextNode(".", TextType.TEXT),
+        ]
+
+        self.assertEqual(len(new_nodes), len(expected_output))
+        for new_node, expected_node in zip(new_nodes, expected_output):
+            self.assertEqual(new_node.text, expected_node.text)
+            self.assertEqual(new_node.text_type, expected_node.text_type)
+            if new_node.text_type == TextType.LINK:
+                self.assertEqual(new_node.url, expected_node.url)
+            if new_node.text_type == TextType.IMAGE:
+                self.assertEqual(new_node.url, expected_node.url)
+
+
+class TestTextToTextNodes(unittest.TestCase):
+
+    def test_missing_delimiters(self):
+        text = "This is **bold text with missing end delimiter"
+        with self.assertRaises(Exception):
+            text_to_textnodes(text)
+
+#    def test_multiple_links_and_images(self):
+#        text = (
+#            "Here is a [link1](http://example1.com) and another [link2](http://example2.com) "
+#            "and an image ![image1](http://example.com/image1.png)"
+#            "and another ![image2](http://example.com/image2.png)."
+#        )
+#        expected_output = [
+#            TextNode("Here is a ", TextType.TEXT),
+#            TextNode("link1", TextType.LINK, url="http://example1.com"),
+#            TextNode(" and another ", TextType.TEXT),
+#            TextNode("link2", TextType.LINK, url="http://example2.com"),
+#            TextNode(" and an image ", TextType.TEXT),
+#            TextNode("image1", TextType.IMAGE, url="http://example.com/image1.png"),
+#            TextNode(" and another ", TextType.TEXT),
+#            TextNode("image2", TextType.IMAGE, url="http://example.com/image2.png"),
+#            TextNode(".", TextType.TEXT),
+#        ]
+#        result = text_to_textnodes(text)
+#        self.assertEqual(len(result), len(expected_output))
+#        for res_node, exp_node in zip(result, expected_output):
+#            self.assertEqual(res_node.text, exp_node.text)
+#            self.assertEqual(res_node.text_type, exp_node.text_type)
+#            if res_node.text_type in [TextType.LINK, TextType.IMAGE]:
+#                self.assertEqual(res_node.url, exp_node.url)
+
+    def test_edge_cases(self):
+        # Empty string
+        text = ""
+        expected_output = []
+        result = text_to_textnodes(text)
+        self.assertEqual(result, expected_output)
+
+        # String with only delimiters
+        text = "**"
+        with self.assertRaises(Exception):
+            text_to_textnodes(text)
+
+    def test_mixed_content(self):
+        text = "Text with `code` and **bold** and *italic* and a [link](http://example.com)."
+        expected_output = [
+            TextNode("Text with ", TextType.TEXT),
+            TextNode("code", TextType.CODE),
+            TextNode(" and ", TextType.TEXT),
+            TextNode("bold", TextType.BOLD),
+            TextNode(" and ", TextType.TEXT),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(" and a ", TextType.TEXT),
+            TextNode("link", TextType.LINK, url="http://example.com"),
+            TextNode(".", TextType.TEXT),
+        ]
+        result = text_to_textnodes(text)
+        self.assertEqual(len(result), len(expected_output))
+        for res_node, exp_node in zip(result, expected_output):
+            self.assertEqual(res_node.text, exp_node.text)
+            self.assertEqual(res_node.text_type, exp_node.text_type)
+            if res_node.text_type == TextType.LINK:
+                self.assertEqual(res_node.url, exp_node.url)
 
 
 if __name__ == "__main__":
