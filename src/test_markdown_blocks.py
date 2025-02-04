@@ -1,6 +1,6 @@
 import unittest
 
-from src.markdown_blocks import markdown_to_blocks
+from src.markdown_blocks import markdown_to_blocks, block_to_block_type
 
 
 class TestMarkdownToBlocks(unittest.TestCase):
@@ -40,6 +40,31 @@ class TestMarkdownToBlocks(unittest.TestCase):
         expected_output = []
         result = markdown_to_blocks(markdown)
         self.assertEqual(result, expected_output)
+
+
+class TestBlockToBlockType(unittest.TestCase):
+
+    def test_heading(self):
+        self.assertEqual(block_to_block_type("# Heading"), "heading")
+
+    def test_unordered_list(self):
+        self.assertEqual(block_to_block_type("- List item"), "unordered_list")
+        self.assertEqual(block_to_block_type("* Another list item"), "unordered_list")
+
+    def test_quote(self):
+        self.assertEqual(block_to_block_type("> Quote"), "quote")
+
+    def test_ordered_list(self):
+        self.assertEqual(block_to_block_type("1. Ordered list item"), "ordered_list")
+        self.assertEqual(block_to_block_type("2. Another ordered list item"), "ordered_list")
+        self.assertEqual(block_to_block_type("10. Yet another ordered list item"), "ordered_list")
+
+    def test_code(self):
+        self.assertEqual(block_to_block_type("```python\ndef foo():\n    pass\n```"), "code")
+        self.assertEqual(block_to_block_type("```\ncode block\n```"), "code")
+
+    def test_paragraph(self):
+        self.assertEqual(block_to_block_type("Just a paragraph"), "paragraph")
 
 
 if __name__ == '__main__':
